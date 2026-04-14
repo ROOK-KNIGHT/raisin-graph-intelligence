@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raisin Reach Graph Intelligence</title>
+    <script src="https://unpkg.com/neovis.js@2.0.2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.8em;
+            margin-bottom: 15px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+        
+        .problem-statement {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+        
+        .problem-statement strong {
+            color: #92400e;
+            font-size: 1.1em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .section {
+            background: white;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+        
+        .list-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .item-count {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .model-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        
+        .matrix-cell {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .matrix-cell.tp { border-color: #10b981; background: #d1fae5; }
+        .matrix-cell.fp { border-color: #f59e0b; background: #fef3c7; }
+        .matrix-cell.fn { border-color: #f59e0b; background: #fef3c7; }
+        .matrix-cell.tn { border-color: #10b981; background: #d1fae5; }
+        
+        .matrix-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .matrix-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-name {
+            flex: 1;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .feature-bar {
+            flex: 2;
+            height: 25px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+        
+        .feature-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+        
+        .feature-value {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .prospect-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .prospect-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .prospect-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .prospect-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .score-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .breakdown {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .predictor-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .predict-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .predict-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .prediction-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            display: none;
+        }
+        
+        .prediction-result.show {
+            display: block;
+        }
+        
+        .probability-bar {
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        }
+        
+        #viz {
+            width: 100%;
+            height: 700px;
+            border: 3px solid #10b981;
+            border-radius: 10px;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+        }
+        
+        .viz-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .viz-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .query-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .query-card h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .query-card p {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        
+        .query-code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+        }
+        
+        .query-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 15px;
+        }
+        
+        .api-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .api-link {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .api-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        
+        .info-box strong {
+            color: #1e40af;
+        }
+        
+        .sample-prospects {
+            margin-top: 10px;
+            padding-left: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .sample-prospect {
+            padding: 5px 0;
+        }
+        
+        .score {
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ACT 1: THE PROBLEM -->
+        <header>
+            <h1>🎯 Raisin Reach Graph Intelligence</h1>
+            <p class="subtitle">From Data to Decisions: Using Graph Databases & Machine Learning to Prioritize B2B Prospects</p>
+            <div class="problem-statement">
+                <strong>The Business Challenge:</strong> Raisin Reach is a B2B appointment-setting company with 120+ prospects across multiple industries and locations. <strong>How do we know which prospects to call first?</strong> Which ones are most likely to convert? This dashboard demonstrates how graph databases combined with machine learning can answer these questions.
+            </div>
+        </header>
+        
+        <!-- ACT 2: THE DATA -->
+        <div class="section">
+            <h2>📊 Our Data Landscape</h2>
+            <p style="color: #666; margin-bottom: 20px;">Understanding the scale and structure of our prospect network</p>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.prospect_count }}</div>
+                    <div class="stat-label">Prospects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.lead_count }}</div>
+                    <div class="stat-label">Leads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.client_count }}</div>
+                    <div class="stat-label">Clients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.relationship_count }}</div>
+                    <div class="stat-label">Relationships</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.conversion_rate }}%</div>
+                    <div class="stat-label">Conversion Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.industry_count }}</div>
+                    <div class="stat-label">Industries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.location_count }}</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.service_count }}</div>
+                    <div class="stat-label">Services</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ACT 3: UNDERSTANDING OUR MARKET -->
+        <div class="section">
+            <h2>🏭 Market Analysis</h2>
+            
+            <h3>Top Industries by Prospect Count</h3>
+            {% for industry in stats.top_industries %}
+            <div class="list-item">
+                <span class="item-name">{{ industry.name }}</span>
+                <span class="item-count">{{ industry.count }}</span>
+            </div>
+            {% endfor %}
+            
+            <h3 style="margin-top: 30px;">Top Locations by Prospect Count</h3>
+            {% for location in stats.top_locations %}
+            <div class="list-item">
+                <span class="item-name">{{ location.city }}, {{ location.state }}</span>
+                <span class="item-count">{{ location.count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- ACT 4: THE ML MODEL -->
+        <div class="section">
+            <h2>🤖 Machine Learning Model: Predicting Conversions</h2>
+            
+            <div class="info-box">
+                <strong>Hypothesis:</strong> Can we predict which prospects will convert to leads based on graph features like industry, location, service diversity, and initial score?
+            </div>
+            
+            <h3>Model: Logistic Regression</h3>
+            <p style="color: #666; margin-bottom: 20px;">
+                <strong>Training Setup:</strong> {{ model_metrics.train_size }} training samples, {{ model_metrics.test_size }} test samples | 
+                <strong>Positive Class:</strong> {{ (model_metrics.positive_class_ratio * 100)|round(1) }}% of prospects converted
+            </p>
+            
+            <h3>Model Performance Metrics</h3>
+            <div class="model-metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">{{ (model_metrics.accuracy * 100)|round(1) }}%</div>
+                    <div class="metric-label">Accuracy</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ (model_metrics.precision * 100)|round(1) }}%</div>
+                    <div class="metric-label">Precision</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ (model_metrics.recall * 100)|round(1) }}%</div>
+                    <div class="metric-label">Recall</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{{ (model_metrics.f1_score * 100)|round(1) }}%</div>
+                    <div class="metric-label">F1 Score</div>
+                </div>
+            </div>
+            
+            <h3>Confusion Matrix</h3>
+            <div class="confusion-matrix">
+                <div class="matrix-cell tp">
+                    <div class="matrix-value">{{ model_metrics.confusion_matrix[0][0] }}</div>
+                    <div class="matrix-label">True Negatives</div>
+                </div>
+                <div class="matrix-cell fp">
+                    <div class="matrix-value">{{ model_metrics.confusion_matrix[0][1] }}</div>
+                    <div class="matrix-label">False Positives</div>
+                </div>
+                <div class="matrix-cell fn">
+                    <div class="matrix-value">{{ model_metrics.confusion_matrix[1][0] }}</div>
+                    <div class="matrix-label">False Negatives</div>
+                </div>
+                <div class="matrix-cell tn">
+                    <div class="matrix-value">{{ model_metrics.confusion_matrix[1][1] }}</div>
+                    <div class="matrix-label">True Positives</div>
+                </div>
+            </div>
+            
+            <h3>Feature Importance: What Drives Conversions?</h3>
+            <p style="color: #666; margin-bottom: 15px;">Ranked by coefficient strength (positive = increases conversion probability)</p>
+            <ul class="feature-list">
+                {% for name, value in model_metrics.feature_importance.items() %}
+                <li class="feature-item">
+                    <span class="feature-name">{{ name.replace('_', ' ').title() }}</span>
+                    <div class="feature-bar">
+                        <div class="feature-bar-fill" style="width: {{ ((value|abs) / 0.65 * 100)|round(0) }}%;"></div>
+                    </div>
+                    <span class="feature-value">{{ value|round(3) }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            
+            <div class="info-box" style="margin-top: 25px;">
+                <strong>Key Insight:</strong> Service diversity (service_count) is the strongest predictor of conversion, with a coefficient of {{ model_metrics.feature_importance.service_count|round(3) }}. Prospects offering more services are significantly more likely to convert!
+            </div>
+        </div>
+        
+        <!-- ACT 5: GRAPH-BASED INTELLIGENCE -->
+        <div class="section">
+            <h2>📈 Graph-Based Prospect Scoring</h2>
+            
+            <div class="info-box">
+                <strong>Scoring Algorithm:</strong> We use a weighted graph-based scoring system that combines:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Service Diversity:</strong> +15 points per service offered</li>
+                    <li><strong>High-Demand Industry:</strong> +20 points for HVAC, Electrical, Roofing</li>
+                    <li><strong>Strategic Location:</strong> +15 points for Denver, Atlanta, Chicago</li>
+                </ul>
+            </div>
+            
+            <h3>Top 20 Prospects by Graph Score</h3>
+            <table class="prospect-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Prospect Name</th>
+                        <th>Graph Score</th>
+                        <th>Score Breakdown</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prospect in graph_scores.top_prospects[:20] %}
+                    <tr>
+                        <td><strong>#{{ loop.index }}</strong></td>
+                        <td>{{ prospect.prospect_name }}</td>
+                        <td><span class="score-badge">{{ prospect.graph_score }}</span></td>
+                        <td class="breakdown">
+                            Services: {{ prospect.breakdown.service_score }} | 
+                            Industry: {{ prospect.breakdown.industry_score }} | 
+                            Location: {{ prospect.breakdown.location_score }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- ACT 6: LIVE PREDICTION TOOL -->
+        <div class="section">
+            <h2>🔮 Live Conversion Predictor</h2>
+            <p style="color: #666; margin-bottom: 20px;">Enter a prospect ID to predict their conversion probability using our trained ML model</p>
+            
+            <div class="predictor-form">
+                <div class="form-group">
+                    <label for="prospectId">Prospect ID (e.g., P001, P002, P050)</label>
+                    <input type="text" id="prospectId" placeholder="Enter prospect ID..." value="P001">
+                </div>
+                <button class="predict-btn" onclick="predictConversion()">🎯 Predict Conversion</button>
+                
+                <div id="predictionResult" class="prediction-result">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">Prediction Results</h3>
+                    <div id="predictionContent"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ACT 7: EXPLORE THE NETWORK -->
+        <div class="section">
+            <h2>🕸️ Interactive Graph Explorer</h2>
+            <p style="color: #666; margin-bottom: 20px;">Visualize the prospect network using Neovis.js - click any query button to render an interactive graph</p>
+            
+            <div id="viz"></div>
+            
+            <div class="query-grid">
+                <div class="query-card">
+                    <h4>Full Network View</h4>
+                    <p>All prospects with their industries & locations</p>
+                    <div class="query-code">MATCH (p:Prospect)-[r]->(n)<br>RETURN p, r, n LIMIT 100</div>
+                    <button class="viz-btn" onclick="renderGraph('MATCH (p:Prospect)-[r]->(n) RETURN p, r, n LIMIT 100')">Visualize Network</button>
+                </div>
+                
+                <div class="query-card">
+                    <h4>Sales Pipeline</h4>
+                    <p>Prospect → Lead → Client conversion paths</p>
+                    <div class="query-code">MATCH path = (p:Prospect)-[:CONVERTED_TO]->(l:Lead)-[:ASSIGNED_TO]->(c:Client)<br>RETURN path LIMIT 20</div>
+                    <button class="viz-btn" onclick="renderGraph('MATCH path = (p:Prospect)-[:CONVERTED_TO]->(l:Lead)-[:ASSIGNED_TO]->(c:Client) RETURN path LIMIT 20')">Visualize Pipeline</button>
+                </div>
+                
+                <div class="query-card">
+                    <h4>Industry Clusters</h4>
+                    <p>Prospects grouped by industry</p>
+                    <div class="query-code">MATCH (p:Prospect)-[:IN_INDUSTRY]->(i:Industry)<br>RETURN p, i LIMIT 80</div>
+                    <button class="viz-btn" onclick="renderGraph('MATCH (p:Prospect)-[:IN_INDUSTRY]->(i:Industry) RETURN p, i LIMIT 80')">Visualize Industries</button>
+                </div>
+                
+                <div class="query-card">
+                    <h4>Geographic Map</h4>
+                    <p>Prospects by location</p>
+                    <div class="query-code">MATCH (p:Prospect)-[:LOCATED_IN]->(l:Location)<br>RETURN p, l LIMIT 80</div>
+                    <button class="viz-btn" onclick="renderGraph('MATCH (p:Prospect)-[:LOCATED_IN]->(l:Location) RETURN p, l LIMIT 80')">Visualize Locations</button>
+                </div>
+                
+                <div class="query-card">
+                    <h4>High-Score Prospects</h4>
+                    <p>Top-scored prospects with connections</p>
+                    <div class="query-code">MATCH (p:Prospect)-[r]-(n)<br>WHERE p.score >= 85<br>RETURN p, r, n</div>
+                    <button class="viz-btn" onclick="renderGraph('MATCH (p:Prospect)-[r]-(n) WHERE p.score >= 85 RETURN p, r, n')">Visualize High Scores</button>
+                </div>
+                
+                <div class="query-card">
+                    <h4>Service Offerings</h4>
+                    <p>Which prospects offer which services</p>
+                    <div class="query-code">MATCH (p:Prospect)-[:OFFERS_SERVICE]->(s:Service)<br>RETURN p, s LIMIT 50</div>
+                    <button class="viz-btn" onclick="renderGraph('MATCH (p:Prospect)-[:OFFERS_SERVICE]->(s:Service) RETURN p, s LIMIT 50')">Visualize Services</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ACT 8: TECHNICAL ARCHITECTURE -->
+        <div class="section">
+            <h2>🛠️ Technical Architecture</h2>
+            
+            <h3>API Endpoints</h3>
+            <div class="api-links">
+                <a href="/api/health" class="api-link">GET /api/health</a>
+                <a href="/api/stats" class="api-link">GET /api/stats</a>
+                <a href="/api/model/metrics" class="api-link">GET /api/model/metrics</a>
+                <a href="/api/model/graph-scores" class="api-link">GET /api/model/graph-scores</a>
+                <a href="/api/model/predict/P001" class="api-link">GET /api/model/predict/{id}</a>
+                <a href="/api/network?limit=50" class="api-link">GET /api/network</a>
+                <a href="/api/industries" class="api-link">GET /api/industries</a>
+                <a href="/docs" class="api-link">📚 API Documentation</a>
+            </div>
+            
+            <h3 style="margin-top: 30px;">Technology Stack</h3>
+            <div class="info-box">
+                <strong>Graph Database:</strong> Neo4j 5.x | 
+                <strong>API Framework:</strong> FastAPI (Python) | 
+                <strong>ML Library:</strong> scikit-learn | 
+                <strong>Visualization:</strong> Neovis.js | 
+                <strong>Deployment:</strong> Docker Compose
+            </div>
+        </div>
+        
+        <div class="section" style="text-align: center;">
+            <p style="color: #666; margin-bottom: 10px;">
+                <strong>Academic Project</strong> - Data Science Course 2026
+            </p>
+            <p style="color: #999; font-size: 0.9em;">
+                Demonstrating the convergence of graph databases, machine learning, and business intelligence
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        let viz;
+        
+        function renderGraph(cypher) {
+            const config = {
+                containerId: "viz",
+                neo4j: {
+                    serverUrl: "bolt://localhost:7687",
+                    serverUser: "neo4j",
+                    serverPassword: "raisinreach2026"
+                },
+                visConfig: {
+                    nodes: {
+                        shape: 'dot',
+                        size: 25,
+                        font: {
+                            size: 14,
+                            color: '#000000'
+                        }
+                    },
+                    edges: {
+                        arrows: {
+                            to: { enabled: true, scaleFactor: 0.5 }
+                        },
+                        color: '#848484',
+                        smooth: { type: 'continuous' }
+                    },
+                    physics: {
+                        enabled: true,
+                        barnesHut: {
+                            gravitationalConstant: -8000,
+                            springConstant: 0.04,
+                            springLength: 95
+                        }
+                    }
+                },
+                labels: {
+                    "Prospect": {
+                        label: "name",
+                        value: "score",
+                        [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+                            static: {
+                                color: "#667eea",
+                                font: { color: "#000000" }
+                            }
+                        }
+                    },
+                    "Industry": {
+                        label: "name",
+                        [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+                            static: {
+                                color: "#10b981",
+                                font: { color: "#000000" }
+                            }
+                        }
+                    },
+                    "Location": {
+                        label: "city",
+                        [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+                            static: {
+                                color: "#f59e0b",
+                                font: { color: "#000000" }
+                            }
+                        }
+                    },
+                    "Lead": {
+                        label: "name",
+                        [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+                            static: {
+                                color: "#8b5cf6",
+                                font: { color: "#000000" }
+                            }
+                        }
+                    },
+                    "Client": {
+                        label: "name",
+                        [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+                            static: {
+                                color: "#ec4899",
+                                font: { color: "#000000" }
+                            }
+                        }
+                    },
+                    "Service": {
+                        label: "name",
+                        [NeoVis.NEOVIS_ADVANCED_CONFIG]: {
+                            static: {
+                                color: "#06b6d4",
+                                font: { color: "#000000" }
+                            }
+                        }
+                    }
+                },
+                relationships: {
+                    "IN_INDUSTRY": { label: "type" },
+                    "LOCATED_IN": { label: "type" },
+                    "CONVERTED_TO": { label: "type" },
+                    "ASSIGNED_TO": { label: "type" },
+                    "REFERRED_BY": { label: "type" },
+                    "SIMILAR_TO": { label: "type" },
+                    "OFFERS_SERVICE": { label: "type" }
+                },
+                initialCypher: cypher
+            };
+            
+            viz = new NeoVis.default(config);
+            viz.render();
+        }
+        
+        async function predictConversion() {
+            const prospectId = document.getElementById('prospectId').value.trim();
+            const resultDiv = document.getElementById('predictionResult');
+            const contentDiv = document.getElementById('predictionContent');
+            
+            if (!prospectId) {
+                alert('Please enter a prospect ID');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/model/predict/${prospectId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const probability = (data.conversion_probability * 100).toFixed(1);
+                    const prediction = data.predicted_conversion ? 'WILL CONVERT' : 'UNLIKELY TO CONVERT';
+                    const predictionColor = data.predicted_conversion ? '#10b981' : '#f59e0b';
+                    
+                    contentDiv.innerHTML = `
+                        <div style="margin-bottom: 20px;">
+                            <strong>Prospect:</strong> ${data.prospect_name} (${data.prospect_id})
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <strong>Prediction:</strong> <span style="color: ${predictionColor}; font-size: 1.3em; font-weight: bold;">${prediction}</span>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <strong>Conversion Probability:</strong>
+                        </div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${probability}%;">${probability}%</div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <strong>Features Used:</strong>
+                            <ul style="margin-top: 10px; margin-left: 20px; color: #666;">
+                                <li>Initial Score: ${data.features.initial_score}</li>
+                                <li>Service Count: ${data.features.service_count}</li>
+                                <li>Industry: ${data.features.industry}</li>
+                                <li>Location: ${data.features.city}, ${data.features.state}</li>
+                            </ul>
+                        </div>
+                        <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                            <strong>Model Confidence:</strong> ${(data.confidence * 100).toFixed(1)}%
+                        </div>
+                    `;
+                    resultDiv.classList.add('show');
+                } else {
+                    contentDiv.innerHTML = `<p style="color: #ef4444;">Error: ${data.detail}</p>`;
+                    resultDiv.classList.add('show');
+                }
+            } catch (error) {
+                contentDiv.innerHTML = `<p style="color: #ef4444;">Error: ${error.message}</p>`;
+                resultDiv.classList.add('show');
+            }
+        }
+        
+        // Allow Enter key to trigger prediction
+        document.getElementById('prospectId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                predictConversion();
+            }
+        });
+    </script>
+</body>
+</html>
